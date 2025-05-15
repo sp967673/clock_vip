@@ -21,7 +21,7 @@
 
 1.  **Clone the Repository**: Clone the GitHub repository to your local machine.
 2.  **Compile the Code**: Compile the SystemVerilog code using your SystemVerilog simulator.
-3.  **Instantiate the VIP**: Instantiate the `clock_generator` VIP in your verification environment.
+3.  **Instantiate the VIP**: Instantiate the `clock_vip` VIP in your verification environment.
 4.  **Configure the VIP**: Configure the clock parameters using the clkgen_config.sv
 5.  **Monitor Clock Signals**: Use the VIP's monitoring features to verify the clock signals.
 
