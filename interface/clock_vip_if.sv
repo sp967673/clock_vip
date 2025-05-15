@@ -16,12 +16,13 @@ interface clock_vip_if(input logic clk);
     // Status signals
     logic clock_active;
     logic config_error;
+
+    logic jitter_clock_active;
     
     // Modports
     modport master_mp (
-        output clock_out,
-        input enable, period_ps, duty_cycle, jitter_ps,
-        output clock_active, config_error
+        output period_ps, duty_cycle, clock_out, jitter_ps,
+        output enable, clock_active, config_error
     );
     
     modport slave_mp (
@@ -33,7 +34,7 @@ interface clock_vip_if(input logic clk);
     modport monitor_mp (
         input clock_in, clock_out,
         input enable, period_ps, duty_cycle, jitter_clock_active,
-        input config_error
+        input jitter_ps, config_error
     );
 endinterface
 

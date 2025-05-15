@@ -8,9 +8,11 @@ class clock_vip_agent extends uvm_agent;
     clock_vip_driver driver;
     clock_vip_monitor monitor;
     uvm_sequencer #(clock_vip_transaction) sequencer;
-    clock_vip_checker checker;
+    clock_vip_checker clk_chk;
     clock_vip_coverage coverage;
     clock_vip_config cfg;
+
+    virtual clock_vip_if vif;
     
     function new(string name, uvm_component parent);
         super.new(name, parent);
@@ -21,6 +23,16 @@ class clock_vip_agent extends uvm_agent;
         
         if(!uvm_config_db#(clock_vip_config)::get(this, "", "cfg", cfg)) begin
             `uvm_fatal("NOCONFIG", "No config object provided")
+        end else begin
+            uvm_config_db#(clock_vip_config)::set(this, "clk_chk*", "cfg", cfg);
+        end
+
+        if (!uvm_config_db#(virtual clock_vip_if)::get(this, "", "vif", vif)) begin
+            `uvm_fatal("NOVIF", "No interface provided")
+        end else begin
+            uvm_config_db#(virtual clock_vip_if.master_mp)::set(this, "driver*", "vif", vif.master_mp);
+            uvm_config_db#(virtual clock_vip_if.monitor_mp)::set(this, "monitor*", "vif", vif.monitor_mp);
+            uvm_config_db#(virtual clock_vip_if)::set(this, "cfg*", "vif", vif);
         end
         
         monitor = clock_vip_monitor::type_id::create("monitor", this);
@@ -31,7 +43,7 @@ class clock_vip_agent extends uvm_agent;
         end
         
         if(cfg.has_checks) begin
-            checker = clock_vip_checker::type_id::create("checker", this);
+            clk_chk = clock_vip_checker::type_id::create("clk_chk", this);
         end
         
         if(cfg.has_coverage) begin
@@ -43,7 +55,10 @@ class clock_vip_agent extends uvm_agent;
         super.connect_phase(phase);
         
         // Connect monitor to checker and coverage
-        monitor.ap.connect(checker.ap_imp);
+        if (cfg.has_checks) begin
+            monitor.ap.connect(clk_chk.ap_imp);
+        end
+
         if(cfg.has_coverage) begin
             monitor.ap.connect(coverage.ap_imp);
         end

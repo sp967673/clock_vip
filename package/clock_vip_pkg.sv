@@ -2,10 +2,13 @@
 `ifndef CLOCK_VIP_PKG_SV
 `define CLOCK_VIP_PKG_SV
 
+`include "clock_vip_if.sv"
+
 package clock_vip_pkg;
     import uvm_pkg::*;
     `include "uvm_macros.svh"
     
+    `timescale 1ns/1ps
     // Configuration object
     `include "clock_vip_config.sv"
     
@@ -19,6 +22,7 @@ package clock_vip_pkg;
         // Constraints
         constraint valid_duty { duty_cycle inside {[1:99]}; }
         constraint valid_period { period_ps inside {[100:1000000]}; } // 100ps to 1us
+        constraint valid_jitter_ps { jitter_ps inside {[1:10]}; }
         
         `uvm_object_utils_begin(clock_vip_transaction)
             `uvm_field_int(enable, UVM_DEFAULT)
@@ -35,10 +39,10 @@ package clock_vip_pkg;
     // Include other components
     `include "clock_vip_driver.sv"
     `include "clock_vip_monitor.sv"
-    `include "clock_vip_agent.sv"
     `include "clock_vip_sequence.sv"
     `include "clock_vip_coverage.sv"
     `include "clock_vip_checker.sv"
+    `include "clock_vip_agent.sv"
 endpackage
 
 `endif //CLOCK_VIP_PKG_SV

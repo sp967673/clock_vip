@@ -20,6 +20,7 @@ class clock_vip_config extends uvm_object;
     function new(string name = "clock_vip_config");
         super.new(name);
     endfunction
+
 endclass
 
 `endif //CLOCK_VIP_CONFIG_SV

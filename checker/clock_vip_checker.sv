@@ -2,10 +2,12 @@
 `ifndef CLOCK_VIP_CHECKER_SV
 `define CLOCK_VIP_CHECKER_SV
 
+`uvm_analysis_imp_decl(_chk)
+
 class clock_vip_checker extends uvm_component;
     `uvm_component_utils(clock_vip_checker)
     
-    uvm_analysis_imp #(clock_vip_transaction, clock_vip_checker) ap_imp;
+    uvm_analysis_imp_chk #(clock_vip_transaction, clock_vip_checker) ap_imp;
     clock_vip_config cfg;
     
     // Configuration from DUT
@@ -29,9 +31,12 @@ class clock_vip_checker extends uvm_component;
         if(!uvm_config_db#(clock_vip_config)::get(this, "", "cfg", cfg)) begin
             `uvm_fatal("NOCONFIG", "No config object provided")
         end
+
+        if (!uvm_config_db#(virtual clock_vip_if)::get(this, "cfg*", "vif", cfg.vif))
+            `uvm_fatal("NOVIF", "Cannot get virtual interface in cfg.vif")
     endfunction
     
-    function void write(clock_vip_transaction tr);
+    function void write_chk(clock_vip_transaction tr);
         // Get expected values from interface
         expected_period = cfg.vif.period_ps;
         expected_duty = cfg.vif.duty_cycle;

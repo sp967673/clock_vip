@@ -9,13 +9,13 @@ class clock_vip_driver extends uvm_driver #(clock_vip_transaction);
     clock_vip_config cfg;
     
     // Internal variables
-    real current_period;
-    real current_duty;
-    real current_jitter;
+    realtime current_period;
+    realtime current_duty;
+    realtime current_jitter;
     bit  current_enable;
     
     // Jitter generation
-    real jitter_values[$];
+    realtime jitter_values[$];
     
     function new(string name, uvm_component parent);
         super.new(name, parent);
@@ -26,15 +26,19 @@ class clock_vip_driver extends uvm_driver #(clock_vip_transaction);
         if(!uvm_config_db#(clock_vip_config)::get(this, "", "cfg", cfg)) begin
             `uvm_fatal("NOCONFIG", "No config object provided")
         end
-        vif = cfg.vif;
+
+        if (!uvm_config_db#(virtual clock_vip_if.master_mp)::get(this, "", "vif", vif))
+            `uvm_fatal("NOVIF", "No interface provided")
     endfunction
     
     task run_phase(uvm_phase phase);
-        fork
+        begin
             reset_signals();
-            get_and_drive();
-            clock_generation();
-        join
+            fork
+                get_and_drive();
+                clock_generation();
+            join
+        end
     endtask
     
     task reset_signals();
@@ -87,9 +91,12 @@ class clock_vip_driver extends uvm_driver #(clock_vip_transaction);
     function void generate_jitter_values();
         jitter_values.delete();
         for(int i=0; i<100; i++) begin
-            real jitter;
+            realtime jitter, random_jitter_val;
+            int current_jitter_int;
             // Generate random jitter within ±jitter_ps/2
-            jitter = ($urandom_range(current_jitter, 0) - current_jitter/2.0);
+            current_jitter_int = int'(current_jitter);
+            random_jitter_val = $urandom_range(current_jitter_int, 0);
+            jitter = (random_jitter_val - current_jitter/2.0);
             jitter_values.push_back(jitter);
         end
     endfunction
@@ -106,14 +113,14 @@ class clock_vip_driver extends uvm_driver #(clock_vip_transaction);
             // Calculate times with jitter
             high_time = current_period * current_duty;
             low_time = current_period * (1.0 - current_duty);
-            
+
             // Apply jitter (round robin through pre-generated values)
             if(jitter_values.size() > 0) begin
                 high_time += jitter_values[jitter_idx]/2.0;
                 low_time += jitter_values[jitter_idx]/2.0;
                 jitter_idx = (jitter_idx + 1) % jitter_values.size();
             end
-            
+
             // Generate clock high phase
             vif.clock_out <= 1;
             next_edge = high_time;
